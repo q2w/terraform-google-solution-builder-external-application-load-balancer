@@ -1,0 +1,113 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: terraform-google-solution-builder-external-application-load-balancer
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  info:
+    title: Cloud External Application Load Balancer
+    source:
+      repo: https://github.com/ayushmjain/terraform-google-solution-builder-external-application-load-balancer.git
+      sourceType: git
+    version: 0.0.1
+    actuationTool:
+      flavor: Terraform
+      version: ">= 0.13"
+    description:
+      tagline: A load balancer distributes user traffic across multiple instances of your applications.
+      detailed: This composition unit creates an L7 external HTTP application load balancer. The backends can be GCE VMs managed instance groups or cloud run services. Note that the backends cannot be a mix of MIGs and cloud run services.
+      preDeploy: To deploy this blueprint you must have an active billing account and billing permissions.
+    icon: assets/icon.png
+  content:
+    documentation:
+    - title: Load Balancer
+      url: https://cloud.google.com/load-balancing/docs/load-balancing-overview
+    examples:
+    - name: simple_example
+      location: examples/simple_example
+  interfaces:
+    variables:
+    - name: cloud_run_service_names
+      description: List of cloud run services that need to be load balanced
+      varType: list(string)
+      defaultValue: []
+      userInputVariable: true
+      connections:
+      - compositionUnitID: terraform-google-solution-builder-cloud-run
+        type: list
+        output: cloud_run_service_name
+    - name: cloud_run_service_regions
+      description: List of regions that the cloud run services are deployed to
+      varType: list(string)
+      defaultValue: []
+      userInputVariable: true
+      connections:
+      - compositionUnitID: terraform-google-solution-builder-cloud-run
+        type: list
+        output: cloud_run_service_region
+    - name: load_balancer_name
+      description: Name of the load balancer to be created
+      varType: string
+      required: true
+      userInputVariable: true
+    - name: load_balancer_port_name
+      description: Name of backend port. The same name should appear in the GCE VM instance group that is being load balanced
+      varType: string
+      userInputVariable: true
+      connections:
+      - compositionUnitID: terraform-google-solution-builder-vm
+        type: direct
+        output: load_balancer_port_name
+    - name: managed_instance_group_health_check_links
+      description: List of health check links of GCE VMs MIGs that are being load balanced
+      varType: list(string)
+      defaultValue: []
+      userInputVariable: true
+      connections:
+      - compositionUnitID: terraform-google-solution-builder-vm
+        type: list
+        output: health_check_link
+    - name: managed_instance_group_urls
+      description: List of GCE VMs managed instance groups URLs
+      varType: list(string)
+      defaultValue: []
+      userInputVariable: true
+      connections:
+      - compositionUnitID: terraform-google-solution-builder-vm
+        type: list
+        output: managed_instance_group_url
+    - name: project_id
+      description: The project ID where the load balancer is created
+      varType: string
+      required: true
+      userInputVariable: true
+    outputs:
+    - name: load_balancer_ip
+      description: IP address of the load balancer
+      solutionOutputVariable: true
+    - name: load_balancer_port
+      description: Load balancer port
+      solutionOutputVariable: true
+    - name: module_dependency
+      description: Dependency variable that can be used by other modules to depend on this module
+      solutionOutputVariable: false
+  requirements:
+    roles:
+    - level: Project
+      roles:
+      - roles/compute.loadBalancerAdmin
