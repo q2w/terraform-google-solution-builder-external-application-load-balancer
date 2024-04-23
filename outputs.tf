@@ -29,3 +29,10 @@ output "module_dependency" {
   depends_on = [google_compute_backend_service.main, google_compute_global_address.main, google_compute_global_forwarding_rule.main, google_compute_region_network_endpoint_group.main, google_compute_target_http_proxy.main, google_compute_url_map.main]
   description = "Dependency variable that can be used by other modules to depend on this module"
 }
+
+output "env_variables" {
+  value = {
+    "LOAD_BALANCER_IP_ADDRESS" = google_compute_global_forwarding_rule.main.ip_address
+  }
+  description = "Environment variables exposed by the load balancer module that can be used."
+}
